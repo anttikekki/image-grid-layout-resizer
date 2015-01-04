@@ -1,0 +1,134 @@
+<html>
+  <body>
+
+      <div>
+        <div class="js-fileapi-wrapper upload-btn">
+          <div class="upload-btn__txt">Choose files</div>
+          <input id="choose" name="files" type="file" multiple />
+        </div>
+      </div>
+
+    <div>
+      <p><input id="start" type="button" value="Start"></p>
+    </div>
+
+    <div id="visualization" style="background-color: #778899;"></div>
+
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>window.FileAPI = { staticPath: 'js/FileAPI/' };</script>
+    <script src="js/FileAPI/FileAPI.js"></script>
+    <script>
+    $(document).ready(function() {
+
+      //http://stackoverflow.com/questions/1186414/whats-the-algorithm-to-calculate-aspect-ratio-i-need-an-output-like-43-169
+      //Greatest common divisor (GCD)
+      function gcd (a, b) {
+        return (b == 0) ? a : gcd (b, a%b);
+      }
+
+      //http://stackoverflow.com/questions/1682495/jquery-resize-to-aspect-ratio
+      function getNewWidthInAspectRatio(newHeight, currentWidth, currentHeight){
+        var aspectRatio = currentWidth / currentHeight;
+        return newHeight * aspectRatio;
+      }
+
+      function getImageAspectRatio($img) {
+        var r = gcd($img.width(), $img.height());
+        return $img.width()/r + ":" + $img.height()/r;
+      }
+
+      function createTestImage(width, height, color) {
+        var img = $('<div style="background-color:' + color + '; float: left;"></div>').width(width).height(height);
+        viz.append(img);
+        //img.append('Original aspect ratio: '+ width / height + '<br>Original: ' + width +' px X '+ height + ' px');
+      }
+
+      function createTestImages() {
+        createTestImage(180, 166, 'red');
+        createTestImage(156, 174, 'green');
+        createTestImage(150, 150, 'yellow');
+        createTestImage(177, 120, 'blue');
+        createTestImage(200, 150, 'gray');
+        createTestImage(140, 160, 'orange');
+        createTestImage(151, 180, 'pink');
+      }
+
+      function calculateRowHeight(images) {
+        var imgAspectCombined = 0;
+
+        for(var i=0; i<images.length; i++) {
+          var img = $( images[i] );
+          imgAspectCombined += (img.width()/img.height());
+        };
+
+        var imgNewHeight = viz.width() / imgAspectCombined;
+
+        return imgNewHeight;
+      }
+
+      function calculateRow(images) {
+        var imgNewHeight = calculateRowHeight(images);
+
+        for(var i=0; i<images.length; i++) {
+          var img = $( images[i] );
+          var imgNewWidth = getNewWidthInAspectRatio(imgNewHeight, img.width(), img.height());
+          img.height(imgNewHeight).width(imgNewWidth);
+
+          //img.append('<br>New aspect ratio: '+ img.width() / img.height() + '<br>New: ' + img.width() +' px X '+ img.height() + ' px');
+        };
+      }
+
+      function calculateAll() {
+        var allImages = viz.find('div');
+        var imgNewHeight = calculateRowHeight(allImages);
+        var rows = 1;
+        var splittedArrays = [allImages];
+
+        while(imgNewHeight < minHeight) {
+          rows++;
+          splittedArrays = splitArray(allImages, rows);
+          imgNewHeight = calculateRowHeight(splittedArrays[0]);
+        }
+        
+        for(var i=0; i<splittedArrays.length; i++) {
+          calculateRow(splittedArrays[i]);
+        } 
+      }
+
+      function splitArray(array, chunks) {
+        var chunkSize = parseInt(array.length / chunks);
+        var resultArrays = [];
+        var resultArray = [];
+
+        for(var i=0; i<array.length; i++) {
+          resultArray.push(array[i]);
+
+          if(resultArray.length >= chunkSize) {
+            resultArrays.push(resultArray);
+            resultArray = [];
+          }
+        }
+
+        return resultArrays;
+      }
+
+      //Init
+      var viz = $('#visualization');
+      viz.width(700).height(800);
+      var minHeight = 100;
+      createTestImages();
+
+      var el = document.getElementById('choose');
+      FileAPI.event.on(el, 'change', function (evt){
+        var files = FileAPI.getFiles(evt);
+        console.log(files);
+      });
+
+      $('#start').click(function() {
+        calculateAll();
+      });
+      
+    });
+    </script>
+  </body>
+</html>
