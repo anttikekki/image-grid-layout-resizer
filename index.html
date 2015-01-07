@@ -13,11 +13,14 @@
       <div>
         <p>Area width: <input type="text" id="areaWidthInput" value="700"></p>
         <p>Area height: <input type="text" id="areaHeightInput" value="800"></p>
+        <p>Min image height: <input type="text" id="minImageHeight" value="150"></p>
         <p><input id="start" type="button" value="Resize images"></p>
       </div>
     </div>
 
-    <div id="visualization" style="background-color: #778899;"></div>
+    <div id="visualizationContainer">
+      <div id="visualization" style="background-color: #778899;"></div>
+    </div>
 
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>window.FileAPI = { staticPath: 'js/FileAPI/' };</script>
@@ -27,6 +30,7 @@
 
       //Init
       var viz = $('#visualization');
+      var visualizationContainer = $('#visualizationContainer');
       var imageResizeControlsContainer = $('#imageResizeControlsContainer');
       var minHeight = 100;
 
@@ -37,13 +41,15 @@
           var vizWidth = $('#areaWidthInput').val();
           var vizHeight = $('#areaHeightInput').val();
           viz.width(vizWidth).height(vizHeight);
-          viz.show();
+          visualizationContainer.show();
+
+          minHeight = parseInt($('#minImageHeight').val());
 
           calculateAll();
         });
 
         imageResizeControlsContainer.hide();
-        viz.hide();
+        visualizationContainer.hide();
       }
 
       //http://stackoverflow.com/questions/1186414/whats-the-algorithm-to-calculate-aspect-ratio-i-need-an-output-like-43-169
@@ -147,7 +153,6 @@
           if( !err ){
             var $img = $(img).width(width).height(height);
             viz.append($img);
-            //document.body.appendChild( img );
           }
         });
       }
