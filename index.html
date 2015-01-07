@@ -1,15 +1,20 @@
 <html>
   <body>
 
-      <div>
-        <div class="js-fileapi-wrapper upload-btn">
-          <div class="upload-btn__txt">Choose files</div>
-          <input id="choose" name="files" type="file" multiple />
-        </div>
-      </div>
-
     <div>
-      <p><input id="start" type="button" value="Start"></p>
+      <div class="js-fileapi-wrapper upload-btn">
+        <div class="upload-btn__txt">Choose images</div>
+        <br>
+        <input id="choose" name="files" type="file" multiple />
+      </div>
+    </div>
+
+    <div id="imageResizeControlsContainer">
+      <div>
+        <p>Area width: <input type="text" id="areaWidthInput" value="700"></p>
+        <p>Area height: <input type="text" id="areaHeightInput" value="800"></p>
+        <p><input id="start" type="button" value="Resize images"></p>
+      </div>
     </div>
 
     <div id="visualization" style="background-color: #778899;"></div>
@@ -19,6 +24,27 @@
     <script src="js/FileAPI/FileAPI.js"></script>
     <script>
     $(document).ready(function() {
+
+      //Init
+      var viz = $('#visualization');
+      var imageResizeControlsContainer = $('#imageResizeControlsContainer');
+      var minHeight = 100;
+
+      function init() {
+        initFileInputListener();
+
+        $('#start').click(function() {
+          var vizWidth = $('#areaWidthInput').val();
+          var vizHeight = $('#areaHeightInput').val();
+          viz.width(vizWidth).height(vizHeight);
+          viz.show();
+
+          calculateAll();
+        });
+
+        imageResizeControlsContainer.hide();
+        viz.hide();
+      }
 
       //http://stackoverflow.com/questions/1186414/whats-the-algorithm-to-calculate-aspect-ratio-i-need-an-output-like-43-169
       //Greatest common divisor (GCD)
@@ -94,26 +120,22 @@
         return resultArrays;
       }
 
-      //Init
-      var viz = $('#visualization');
-      viz.width(700).height(800);
-      var minHeight = 100;
-      //createTestImages();
+      function initFileInputListener() {
+        var el = document.getElementById('choose');
+        FileAPI.event.on(el, 'change', function (evt){
+          var files = FileAPI.getFiles(evt);
 
-      var el = document.getElementById('choose');
-      FileAPI.event.on(el, 'change', function (evt){
-        var files = FileAPI.getFiles(evt);
-        //console.log(files);
-
-        FileAPI.each(files, function(file) {
-          FileAPI.getInfo(file, function (err/**String*/, info/**Object*/){
-            if( !err ){
-              imageUploaded(file, info.width, info.height);
-            }
+          FileAPI.each(files, function(file) {
+            FileAPI.getInfo(file, function (err/**String*/, info/**Object*/){
+              if( !err ){
+                imageUploaded(file, info.width, info.height);
+              }
+            });
           });
-        });
 
-      });
+          imageResizeControlsContainer.show();
+        });
+      }
 
       function imageUploaded(file, width, height) {
         var previewImageSize = scaleSize(300, 300, width, height);
@@ -149,9 +171,9 @@
         ;
       }
 
-      $('#start').click(function() {
-        calculateAll();
-      });
+      
+
+      init();
       
     });
     </script>
