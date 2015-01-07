@@ -37,22 +37,6 @@
         return $img.width()/r + ":" + $img.height()/r;
       }
 
-      function createTestImage(width, height, color) {
-        var img = $('<div style="background-color:' + color + '; float: left;"></div>').width(width).height(height);
-        viz.append(img);
-        //img.append('Original aspect ratio: '+ width / height + '<br>Original: ' + width +' px X '+ height + ' px');
-      }
-
-      function createTestImages() {
-        createTestImage(180, 166, 'red');
-        createTestImage(156, 174, 'green');
-        createTestImage(150, 150, 'yellow');
-        createTestImage(177, 120, 'blue');
-        createTestImage(200, 150, 'gray');
-        createTestImage(140, 160, 'orange');
-        createTestImage(151, 180, 'pink');
-      }
-
       function calculateRowHeight(images) {
         var imgAspectCombined = 0;
 
@@ -73,13 +57,11 @@
           var img = $( images[i] );
           var imgNewWidth = getNewWidthInAspectRatio(imgNewHeight, img.width(), img.height());
           img.height(imgNewHeight).width(imgNewWidth);
-
-          //img.append('<br>New aspect ratio: '+ img.width() / img.height() + '<br>New: ' + img.width() +' px X '+ img.height() + ' px');
         };
       }
 
       function calculateAll() {
-        var allImages = viz.find('div');
+        var allImages = viz.find('canvas');
         var imgNewHeight = calculateRowHeight(allImages);
         var rows = 1;
         var splittedArrays = [allImages];
@@ -116,13 +98,56 @@
       var viz = $('#visualization');
       viz.width(700).height(800);
       var minHeight = 100;
-      createTestImages();
+      //createTestImages();
 
       var el = document.getElementById('choose');
       FileAPI.event.on(el, 'change', function (evt){
         var files = FileAPI.getFiles(evt);
-        console.log(files);
+        //console.log(files);
+
+        FileAPI.each(files, function(file) {
+          FileAPI.getInfo(file, function (err/**String*/, info/**Object*/){
+            if( !err ){
+              imageUploaded(file, info.width, info.height);
+            }
+          });
+        });
+
       });
+
+      function imageUploaded(file, width, height) {
+        var previewImageSize = scaleSize(300, 300, width, height);
+        addPreviewImage(file, previewImageSize.width, previewImageSize.height);
+      }
+
+      function addPreviewImage(file, width, height) {
+        FileAPI.Image(file)/*.resize(width, height)*/.get(function (err/**String*/, img/**HTMLElement*/){
+          if( !err ){
+            var $img = $(img).width(width).height(height);
+            viz.append($img);
+            //document.body.appendChild( img );
+          }
+        });
+      }
+
+      //http://www.ajaxblender.com/howto-resize-image-proportionally-using-javascript.html
+      function scaleSize(maxW, maxH, currW, currH){
+
+        var ratio = currH / currW;
+        
+        if(currW >= maxW && ratio <= 1){
+          currW = maxW;
+          currH = currW * ratio;
+        } else if(currH >= maxH){
+          currH = maxH;
+          currW = currH / ratio;
+        }
+
+        return {
+          width: currW, 
+          height: currH}
+        ;
+      }
 
       $('#start').click(function() {
         calculateAll();
