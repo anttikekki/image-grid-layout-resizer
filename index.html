@@ -55,12 +55,6 @@
         visualizationContainer.hide();
       }
 
-      //http://stackoverflow.com/questions/1186414/whats-the-algorithm-to-calculate-aspect-ratio-i-need-an-output-like-43-169
-      //Greatest common divisor (GCD)
-      function gcd (a, b) {
-        return (b == 0) ? a : gcd (b, a%b);
-      }
-
       //http://stackoverflow.com/questions/1682495/jquery-resize-to-aspect-ratio
       function getNewWidthInAspectRatio(newHeight, currentWidth, currentHeight){
         var aspectRatio = currentWidth / currentHeight;
@@ -92,9 +86,17 @@
               viz.append(img);
 
               $(img).click(function(event) {
-                var $canvas = $(this);
-                Canvas2Image.saveAsJPEG(this, $canvas.width(), $canvas.height());
+                var canvas = this;
+                Canvas2Image.saveAsJPEG(canvas, canvas.width, canvas.height);
               });
+
+              var ctx = img.getContext('2d');
+              ctx.fillStyle = 'white';
+              ctx.fillRect(5,5,130,30);
+
+              ctx.font='13px';
+              ctx.fillStyle = 'black';
+              ctx.fillText('Width: ' + parseInt(img.width) + ' Height: ' + parseInt(img.height) , 10, 25);
             }
           });
         };
@@ -154,8 +156,6 @@
           imageResizeControlsContainer.show();
         });
       }
-
-      
 
       init();
       
