@@ -19,12 +19,14 @@
     </div>
 
     <div id="visualizationContainer">
+      <p>Click resized image to save it</p>
       <div id="visualization" style="background-color: #778899;"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
     <script>window.FileAPI = { staticPath: 'js/FileAPI/' };</script>
     <script src="js/FileAPI/FileAPI.js"></script>
+    <script src="js/canvas2image.js"></script>
     <script>
     $(document).ready(function() {
 
@@ -33,6 +35,7 @@
       var visualizationContainer = $('#visualizationContainer');
       var imageResizeControlsContainer = $('#imageResizeControlsContainer');
       var minHeight = 100;
+      var imageCanvases = [];
 
       function init() {
         initFileInputListener();
@@ -64,17 +67,12 @@
         return newHeight * aspectRatio;
       }
 
-      function getImageAspectRatio($img) {
-        var r = gcd($img.width(), $img.height());
-        return $img.width()/r + ":" + $img.height()/r;
-      }
-
       function calculateRowHeight(images) {
         var imgAspectCombined = 0;
 
         for(var i=0; i<images.length; i++) {
-          var img = $( images[i] );
-          imgAspectCombined += (img.width()/img.height());
+          var img = images[i];
+          imgAspectCombined += (img.width/img.height);
         };
 
         var imgNewHeight = viz.width() / imgAspectCombined;
@@ -86,14 +84,24 @@
         var imgNewHeight = calculateRowHeight(images);
 
         for(var i=0; i<images.length; i++) {
-          var img = $( images[i] );
-          var imgNewWidth = getNewWidthInAspectRatio(imgNewHeight, img.width(), img.height());
-          img.height(imgNewHeight).width(imgNewWidth);
+          var image = images[i];
+          var imgNewWidth = getNewWidthInAspectRatio(imgNewHeight, image.width, image.height);
+
+          FileAPI.Image(image.file).resize(imgNewWidth, imgNewHeight).get(function (err/**String*/, img/**HTMLElement*/){
+            if( !err ){
+              viz.append(img);
+
+              $(img).click(function(event) {
+                var $canvas = $(this);
+                Canvas2Image.saveAsJPEG(this, $canvas.width(), $canvas.height());
+              });
+            }
+          });
         };
       }
 
       function calculateAll() {
-        var allImages = viz.find('canvas');
+        var allImages = imageCanvases;
         var imgNewHeight = calculateRowHeight(allImages);
         var rows = 1;
         var splittedArrays = [allImages];
@@ -134,46 +142,17 @@
           FileAPI.each(files, function(file) {
             FileAPI.getInfo(file, function (err/**String*/, info/**Object*/){
               if( !err ){
-                imageUploaded(file, info.width, info.height);
+                imageCanvases.push({
+                  file: file, 
+                  width: info.width, 
+                  height: info.height
+                });
               }
             });
           });
 
           imageResizeControlsContainer.show();
         });
-      }
-
-      function imageUploaded(file, width, height) {
-        var previewImageSize = scaleSize(300, 300, width, height);
-        addPreviewImage(file, previewImageSize.width, previewImageSize.height);
-      }
-
-      function addPreviewImage(file, width, height) {
-        FileAPI.Image(file)/*.resize(width, height)*/.get(function (err/**String*/, img/**HTMLElement*/){
-          if( !err ){
-            var $img = $(img).width(width).height(height);
-            viz.append($img);
-          }
-        });
-      }
-
-      //http://www.ajaxblender.com/howto-resize-image-proportionally-using-javascript.html
-      function scaleSize(maxW, maxH, currW, currH){
-
-        var ratio = currH / currW;
-        
-        if(currW >= maxW && ratio <= 1){
-          currW = maxW;
-          currH = currW * ratio;
-        } else if(currH >= maxH){
-          currH = maxH;
-          currW = currH / ratio;
-        }
-
-        return {
-          width: currW, 
-          height: currH}
-        ;
       }
 
       
